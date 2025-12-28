@@ -71,11 +71,5 @@ O projeto é dividido em dois módulos principais para facilitar a manutenção:
 * `main.py`: Gerencia a interface gráfica, o servidor local do avatar e a ponte entre o Python e o Javascript.
 * `reconhecimento.py`: Módulo isolado responsável por capturar o áudio do microfone e processar com o Faster Whisper.
 
-## :memo: Licença e Créditos
-
-Este projeto utiliza o motor gráfico do **VLibras** (Governo Federal do Brasil) e é baseado no wrapper web original de [Luan de Gregori](https://github.com/luangregori).
-
-Distribuído sob a licença MIT. Veja o arquivo [LICENSE](LICENSE.md) para mais detalhes.
-
 ---
 Desenvolvido com 💙 para acessibilidade.
