@@ -12,7 +12,7 @@
 
 ## :dart: Sobre o Projeto
 
-Este projeto é uma evolução do visualizador web do VLibras. Ele encapsula o avatar em uma janela flutuante (**widget**) que fica sempre sobreposta a outras janelas, ideal para apresentações, aulas e acessibilidade em tempo real.
+Este projeto é uma evolução do visualizador web do VLibras. Ele encapsula o avatar em uma janela flutuante que fica sempre sobreposta a outras janelas, ideal para apresentações, aulas e acessibilidade em tempo real.
 
 O sistema utiliza:
 1.  **Faster Whisper:** Para reconhecimento de fala offline de alta precisão.
