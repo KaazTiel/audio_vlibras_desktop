@@ -1,0 +1,25 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Ambiente Virtual (Sempre ignorar) ---
+venv/
+env/
+.venv/
+
+# --- Arquivos gerados em tempo de execução ---
+transcricao.json
+*.log
+
+# --- Modelos de IA (São muito pesados para o GitHub) ---
+# O ideal é baixar esses modelos via script ou manualmente
+model/
+
+# --- Configurações de IDE (VS Code, Pycharm, etc) ---
+.vscode/
+.idea/
+
+# --- Arquivos de Sistema Operacional ---
+.DS_Store
+Thumbs.db

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <script>
+    // --- FUNÇÕES CRÍTICAS (No Head para carregar primeiro) ---
+    window.py_atualizar_texto_loading = function(msg) {
+        var el = document.getElementById('loading-text');
+        if(el) el.innerText = msg;
+    };
+
+    window.py_esconder_loading = function() {
+        var screen = document.getElementById('loading-screen');
+        var wrap = document.getElementById('wrapper');
+        
+        if(screen) {
+            screen.style.opacity = '0';
+            setTimeout(function() {
+                screen.style.display = 'none';
+                if(wrap) wrap.style.opacity = '1';
+            }, 500);
+        }
+    };
+  </script>
+
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; background-color: #333; font-family: sans-serif; }
+    
+    /* AVATAR WRAPPER (Começa invisível) */
+    #wrapper { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; opacity: 0; transition: opacity 1s;}
+    #wrapper canvas { width: 100% !important; height: 100% !important; display: block; outline: none; }
+
+    /* TELA DE LOADING */
+    #loading-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: #222; z-index: 9999;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      color: white; transition: opacity 0.5s;
+    }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.1); border-left-color: #007bff;
+      border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    #loading-text { font-size: 14px; color: #ccc; letter-spacing: 1px; }
+
+    /* UI DO USUÁRIO */
+    #btnConfig {
+      position: absolute; bottom: 20px; left: 20px; width: 40px; height: 40px;
+      background: rgba(0, 0, 0, 0.5); color: white; border: none; border-radius: 50%;
+      cursor: pointer; z-index: 200; font-size: 18px; transition: 0.3s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #btnConfig:hover { background: rgba(0, 0, 0, 0.8); transform: rotate(90deg); }
+
+    #painelConfig {
+      position: absolute; bottom: 70px; left: 20px; background: rgba(255, 255, 255, 0.95);
+      padding: 15px; border-radius: 10px; width: 200px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      z-index: 199; display: none; flex-direction: column; gap: 10px;
+    }
+    label { font-size: 12px; font-weight: bold; color: #333; }
+    input[type="range"] { width: 100%; cursor: pointer; }
+    .status-text { font-size: 11px; color: #666; text-align: center; margin-top: 5px; border-top: 1px solid #ccc; padding-top: 5px;}
+  </style>
+</head>
+<body>
+
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <div id="loading-text">Iniciando...</div>
+  </div>
+  
+  <button id="btnConfig" onclick="toggleConfig()"><i class="fas fa-cog"></i></button>
+
+  <div id="painelConfig">
+    <label>Velocidade: <span id="valVel">1</span></label>
+    <input type="range" id="sliderVelocidade" min="1" max="5" step="0.2" value="1" oninput="atualizarVel()">
+    <div class="status-text" id="textoStatus">Aguardando...</div>
+  </div>
+
+  <div id="wrapper"></div>
+
+  <script src="vlibras.js"></script>
+
+  <script>
+    var player = null;
+    var fila = [];
+    var ocupado = false; 
+    var timerDebounce = null; 
+
+    // --- LÓGICA DE FILA E DEBOUNCE ---
+    var originalStateChange = window.onPlayingStateChange || function(){};
+
+    window.onPlayingStateChange = function(isPlaying, isPaused, isInterval, isLoading) {
+        originalStateChange(isPlaying, isPaused, isInterval, isLoading);
+        var rodando = (String(isPlaying) === 'True' || isPlaying === true);
+        
+        if (rodando) {
+            if (timerDebounce) { clearTimeout(timerDebounce); timerDebounce = null; }
+            ocupado = true;
+            atualizarStatus("Sinalizando...");
+        } else {
+            if (ocupado && !timerDebounce) {
+                timerDebounce = setTimeout(function() {
+                    ocupado = false;
+                    timerDebounce = null;
+                    tocarProximo();
+                }, 500); 
+            }
+        }
+    };
+
+    window.onload = function() {
+      player = new VLibras.Player({
+        target: { name: 'rnp_webgl', path: './target' }
+      });
+      player.on('load', function () {
+        player.setPersonalization(''); 
+        var canvas = document.querySelector('#wrapper canvas');
+        if(canvas) { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      });
+      player.load(document.getElementById('wrapper'));
+    };
+
+    window.py_receber = function(glosa) {
+      if(!glosa) return;
+      fila.push(glosa);
+      atualizarStatus(`Fila: ${fila.length}`);
+      if (!ocupado && !timerDebounce) tocarProximo();
+    };
+
+    function tocarProximo() {
+      if (fila.length === 0 || ocupado) {
+        if(fila.length === 0) atualizarStatus("Ouvindo...");
+        return;
+      }
+      var frase = fila.shift();
+      ocupado = true;
+      atualizarVel();
+      player.play(frase);
+    }
+
+    function toggleConfig() {
+      var painel = document.getElementById('painelConfig');
+      painel.style.display = (painel.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function atualizarVel() {
+        if(!player) return;
+        var val = document.getElementById('sliderVelocidade').value;
+        document.getElementById('valVel').innerText = val;
+        try { player.setSpeed(parseFloat(val)); } catch(e){}
+    }
+
+    function atualizarStatus(texto) {
+        var el = document.getElementById('textoStatus');
+        if(el) el.innerText = texto;
+    }
+
+    window.addEventListener('resize', function() {
+      var cv = document.querySelector('#wrapper canvas');
+      if(cv) { cv.width = window.innerWidth; cv.height = window.innerHeight; }
+    });
+  </script>
+</body>
+</html>

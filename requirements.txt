@@ -1,0 +1,7 @@
+pywebview
+requests
+urllib3
+sounddevice
+numpy
+scipy
+faster-whisper

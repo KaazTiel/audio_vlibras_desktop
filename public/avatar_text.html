@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VLibras Local - Com Velocidade</title>
+  
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; background-color: #333; font-family: sans-serif; }
+
+    #wrapper {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0;
+    }
+
+    #wrapper canvas { width: 100% !important; height: 100% !important; display: block; outline: none; }
+
+    /* Painel de Controle Ajustado */
+    #controles {
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 25px;
+      border-radius: 12px;
+      display: flex; flex-direction: column; gap: 15px; /* Mudei para coluna para caber o slider */
+      box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+      align-items: center;
+      min-width: 300px;
+    }
+
+    .input-group { display: flex; gap: 10px; width: 100%; }
+
+    input[type="text"] { 
+      padding: 12px; flex-grow: 1; 
+      border: 1px solid #ccc; border-radius: 6px; 
+      text-transform: uppercase; font-weight: bold;
+    }
+
+    button { 
+      padding: 12px 20px; 
+      background: #28a745; color: white; 
+      border: none; border-radius: 6px; 
+      cursor: pointer; font-weight: bold; white-space: nowrap;
+    }
+    button:hover { background: #218838; }
+    button:disabled { background: #ccc; cursor: wait; }
+
+    /* Estilo do Slider de Velocidade */
+    .speed-control {
+      display: flex; align-items: center; gap: 10px; width: 100%; font-size: 14px; color: #333;
+    }
+    input[type="range"] { flex-grow: 1; cursor: pointer; }
+
+    #loading {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      color: white; font-size: 24px; font-weight: bold;
+      z-index: 50; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loading">Carregando Avatar...</div>
+  <div id="wrapper"></div>
+
+  <div id="controles">
+    
+    <div class="input-group">
+      <input type="text" id="inputGlosa" placeholder="EX: CASA" value="OLA TUDO-BEM">
+      <button id="btnExecutar" onclick="executarSinais()" disabled>Executar</button>
+    </div>
+
+    <div class="speed-control">
+      <span>Lento</span>
+      <input type="range" id="sliderVelocidade" min="1" max="3" step="0.1" value="0" oninput="mudarVelocidade()">
+      <span>Rápido</span>
+    </div>
+
+  </div>
+
+  <script src="vlibras.js"></script>
+
+  <script>
+    var player = null;
+
+    window.onload = function() {
+      console.log("Iniciando player...");
+
+      player = new VLibras.Player({
+        target: { 
+          name: 'rnp_webgl', // Verifique se é rnp_webgl.json ou vlibras.json na pasta target
+          path: './target' 
+        }
+      });
+
+      player.on('load', function () {
+        console.log(">>> Avatar Pronto!");
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('btnExecutar').disabled = false;
+        
+        player.setPersonalization(''); 
+        
+        // Garante que a velocidade inicial do slider seja aplicada
+        mudarVelocidade();
+
+        redimensionarAvatar();
+      });
+
+      player.load(document.getElementById('wrapper'));
+    };
+
+    function executarSinais() {
+      if (!player) return;
+      var input = document.getElementById('inputGlosa');
+      var glosa = input.value;
+      if(!glosa) return;
+      
+      glosa = glosa.toUpperCase().trim();
+      player.play(glosa);
+    }
+
+    // --- NOVA FUNÇÃO DE VELOCIDADE ---
+    function mudarVelocidade() {
+      if (!player) return;
+      
+      var slider = document.getElementById('sliderVelocidade');
+      var valor = parseFloat(slider.value); // Converte string para número decimal
+      
+      // O método setSpeed existe na maioria das versões do vlibras.js antigo
+      try {
+        console.log("Ajustando velocidade para:", valor);
+        player.setSpeed(valor);
+      } catch (e) {
+        console.error("Erro ao ajustar velocidade. O método setSpeed não existe nesta versão do JS.", e);
+      }
+    }
+
+    // Responsividade
+    function redimensionarAvatar() {
+      var canvas = document.querySelector('#wrapper canvas');
+      if(canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    }
+    window.addEventListener('resize', redimensionarAvatar);
+
+  </script>
+</body>
+</html>
